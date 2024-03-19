@@ -11,6 +11,7 @@ import os
 import sys
 
 import mainLib
+import MainFrame.ObjectCore as og
 from MainFrame import __init__ as inint
 from MainFrame import GPURenderHelper as GPUhelp
 import PyENGPhys
@@ -170,7 +171,7 @@ if __name__ == '__main__':
         pygame.init()
         display = (800, 600)
         scree = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
-
+        _obj_core = og.main(obj_on_scene)
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_LIGHTING)
         glShadeModel(GL_SMOOTH)
@@ -331,144 +332,8 @@ if __name__ == '__main__':
 
         # CPU рендер
         if (conrine == True or conrine == True):
-
-            pr = mainLib.primitivs()
-            vm = m_math.vectors()
-            objW = mainLib.ModelWorker()
-
-
-            for obj in range(len(obj_on_scene)):
-                _objeck = obj_on_scene[obj]
-                _type = _objeck['type']
-
-
-                try:
-                    dim_scripst.update()
-                except Exception:
-                    pass
-                if _type == 0:
-                    coords = _objeck["models"]
-                    uv_coords = _objeck["uv"]
-                    textyres = _objeck['tex']
-                    xyz = _objeck['xyz']
-                    coords = vm.avx_hvsum(coords, xyz)
-                    GPUrd.coord_render_GPU(textyres, coords, uv_coords)
-                if _type == 1:
-                    coords = _objeck["models"]
-                    uv_coords = _objeck["uv"]
-                    textyres = _objeck['tex']
-                    xyz = _objeck['xyz']
-                    coords = vm.avx_hvsum(coords, xyz)
-                    pr.coord_render_tex(textyres, coords, uv_coords)
-                if _type == 2:
-                    coords = _objeck["models"]
-                    uv_coords = _objeck["uv"]
-                    textyres = _objeck['tex']
-                    stop_coord = _objeck["stop_dist"]
-                    is_looped = _objeck["loop"]
-                    xyz = _objeck['xyz']
-                    speed_obj = _objeck["speed"]
-                    curent_tg = stop_coord
-                    dist = vm.vsub(curent_tg, xyz)
-                    if xyz[0] <= curent_tg[0]:
-                        if dist[0] > 0:
-                            xyz = vm.vsum(xyz, [i * (speed_obj / 10), 0, 0])
-                        elif dist[0] < 0:
-                            xyz = vm.vsub(xyz, [i * (speed_obj / 10), 0, 0])
-                    if xyz[1] <= curent_tg[1]:
-                        if dist[1] > 0:
-                            xyz = vm.vsum(xyz, [0, i * (speed_obj / 10), 0])
-                        elif dist[1] < 0:
-                            xyz = vm.vsub(xyz, [0, i * (speed_obj / 10), 0])
-                    if xyz[2] <= curent_tg[2]:
-                        if dist[2] > 0:
-                            xyz = vm.vsum(xyz, [0, 0, i * (speed_obj / 10)])
-                        elif dist[2] < 0:
-                            xyz = vm.vsub(xyz, [0, 0, i * (speed_obj / 10)])
-                    coords = vm.avx_hvsum(coords, xyz)
-                    pr.coord_render_tex(textyres, coords, uv_coords)
-                    _objeck['xyz'] = xyz
-                if _type == 3:
-                    try:
-                        coords = _objeck["models"]
-                    except:
-                        models = _objeck["model"]
-                        coords, uv_coords = objW.GetOBJModel(models)
-                    textyres = _objeck['tex']
-                    xyz = _objeck['xyz']
-                    size = _objeck['size']
-                    coords = vm.avx_nmul(coords, size)
-                    coords = vm.avx_hvsum(coords, xyz)
-                    pr.coord_render_tex(textyres, coords, uv_coords)
-                if _type == 4:
-                    coords = _objeck["models"]
-                    uv_coords = _objeck["uv"]
-                    textyres = _objeck['tex']
-                    xyz = _objeck['xyz']
-                    try:
-                        iter = _objeck["i"]
-                    except:
-                        _objeck["i"] = 0
-                        iter = 0
-                    try:
-                        rev = _objeck["rev"]
-                    except:
-                        _objeck["rev"] = False
-                        rev = False
-                    xyz = vm.vsum(xyz, [0, 0, iter])
-
-                    if rev is False:
-                        if iter <= 5 and iter >= -5:
-                            iter = iter + 0.1
-                        else:
-                            rev = True
-                    if rev is True:
-                        if iter > -5:
-                            iter = iter - 0.1
-                        elif iter < -5:
-                            iter = -5
-                        else:
-                            rev = False
-                    coords = vm.avx_hvsum(coords, xyz)
-                    pr.coord_render_tex(textyres, coords, uv_coords)
-                    _objeck['xyz'] = xyz
-                    _objeck["i"] = iter
-                    _objeck["rev"] = rev
-                if type == 5:
-                    name = _objeck["name"]
-                    obj_id = _objeck["id"]
-                    parametrs = _objeck['pars']
-                    keys = []
-                    transform = False
-                    rendr = False
-                    for k in parametrs.keys():
-                        if 'transform' in k:
-                            transform = True
-                        if 'render' in k:
-                            rendr = True
-                        keys.append(k)
-                    if rendr is True:
-                        transf = parametrs['render']
-                        coords = transf["models"]
-                        uv_coords = transf["uv"]
-                        textyres = transf['tex']
-                    if transform is True:
-                        transf = parametrs['transform']
-                        xyz = transf['xyz']
-                        local_xyz = transf['local_xyz']
-                        size = transf['size']
-                        coords = vm.avx_hvsum(coords, xyz)
-                        coords = vm.avx_hvsum(coords, local_xyz)
-                        coords = vm.avx_hvmul(coords, transf)
-                    if rendr is True:
-                        pr.coord_render_tex(textyres, coords, uv_coords)
-
-
-
-
+            _obj_core.main(i)
             i = i + 1
-
-
         else:
             # рандер на шейдере
 

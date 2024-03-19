@@ -45,6 +45,7 @@ class GameObject:
         for scr in self.prop_dt:
             self.scrip_name.append(scr['file'])
         runner = ScriptRunner()
+        self.scr_raner = runner
         runner.load_scripts(self.scrip_name)
         runner.run_method_on_scripts("aweik")
 
@@ -104,6 +105,11 @@ class GameObject:
         self.model = vm.avx_hvsum(self.model, self.local_xyz)
         self.model = vm.avx_hvmul(self.model, self.transform)
 
+    def __start__(self):
+        runner = self.scr_raner
+        runner.load_scripts(self.scrip_name)
+        runner.run_method_on_scripts("start")
+
     def __self__(self):
         return self
 
@@ -112,7 +118,7 @@ class main():
     def __init__(self, scene):
         self.scene = scene
         self.scene.objects = []
-        for _obj_ in self.scene.objects:
+        for _obj_ in self.scene:
             _type = _obj_['type']
             if _type == 5:
                 try:
@@ -138,12 +144,16 @@ class main():
                 _obj = GameObject(_type['name'], models, _type['xyz'], local_pos, prop_dt, uv, texr, _type['id'])
                 self.scene.objects.append(_obj)
 
+
     def main(self, frame_id):
         i = frame_id
         obj_on_scene = self.scene
         pr = mainLib.primitivs()
         vm = m_math.vectors()
         objW = mainLib.ModelWorker()
+        if frame_id == 0:
+            for _obj_ in self.scene.objects:
+                _obj_.__start__()
 
         for obj in range(len(obj_on_scene)):
             _objeck = obj_on_scene[obj]
