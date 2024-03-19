@@ -167,7 +167,7 @@ scene = [
             'id': 2,
             'type': 0,
             'xyz':[0, 20, 0],
-            'tex':'rsr\\material\\material\\test_textr2.jpg',
+            'tex':'rsr\\material\\material\\test_textr.jpg',
             'models': [
             [-20, 0, -10],
             [20, 0, -10],
@@ -186,7 +186,7 @@ scene = [
             'id': 3,
             'type': 0,
             'xyz':[0, -20, 0],
-            'tex':'rsr\\material\\material\\test_textr2.jpg',
+            'tex':'rsr\\material\\material\\test_textr.jpg',
             'models': [
             [-20, 0, -10],
             [20, 0, -10],
@@ -199,6 +199,27 @@ scene = [
                 [1, 1],
                 [0, 1]
             ]
+        },
+{
+            "name": "game_object_proto",
+            'id': '4',
+            'type': 5,
+            'xyz':[5, -10, 0],
+            "l_xyz":[0, 0, 0],
+            'tex':'rsr\\material\\material\\test_textr.jpg',
+            'models': [
+            [-20, 0, -10],
+            [20, 0, -10],
+            [20, 0, 10],
+            [-20, 0, 10]
+            ],
+            'uv':[
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1]
+            ],
+            'component':[{'name':'test', 'file':'rsr\\scripts\\test.py'}]
         },
 ]
 

@@ -28,15 +28,13 @@ class ScriptRunner:
 
 
 class GameObject:
-    def __init__(self, name, model, xyz, Local_xyz, properti, uv, text_way, id):
+    def __init__(self, model, xyz, Local_xyz, properti, uv, text_way, ids):
         pos = xyz
         l_pos = Local_xyz
-        object_name = name
         self.uv = uv
         self.textur = text_way
-        self.name = object_name
         self.transform = [1, 1, 1]
-        self.id = id
+        self.id = ids
         self.model = np.array(model, dtype=np.float64)
         self.xyz = pos
         self.local_xyz = l_pos
@@ -117,7 +115,7 @@ class GameObject:
 class main():
     def __init__(self, scene):
         self.scene = scene
-        self.scene.objects = []
+        self.objects = []
         for _obj_ in self.scene:
             _type = _obj_['type']
             if _type == 5:
@@ -134,15 +132,16 @@ class main():
                 except:
                     models = [0, 0, 0]
                 try:
-                    local_pos = _type["l_xyz"]
+                    local_pos = _obj_["l_xyz"]
                 except:
                     local_pos = [0, 0, 0]
                 try:
-                    prop_dt = _type['component']
+                    prop_dt = _obj_['component']
                 except:
                     prop_dt = [{'name': 'plays_holder', 'file': None}]
-                _obj = GameObject(_type['name'], models, _type['xyz'], local_pos, prop_dt, uv, texr, _type['id'])
-                self.scene.objects.append(_obj)
+                ids = _obj_['id']
+                _obj__ = GameObject(model=models, xyz=_obj_['xyz'], Local_xyz=local_pos, properti=prop_dt, uv=uv, text_way=texr, ids=int(ids))
+                self.objects.append(_obj__)
 
 
     def main(self, frame_id):
@@ -152,7 +151,7 @@ class main():
         vm = m_math.vectors()
         objW = mainLib.ModelWorker()
         if frame_id == 0:
-            for _obj_ in self.scene.objects:
+            for _obj_ in self.objects:
                 _obj_.__start__()
 
         for obj in range(len(obj_on_scene)):
@@ -249,12 +248,12 @@ class main():
             if _type == 5:
                 ij = 0
                 while True:
-                    _obj_ = self.scene.objects[ij]
+                    _obj_ = self.objects[ij]
                     obj_id = _obj_.id
-                    if obj_id == _type['id']:
+                    if obj_id == ['id']:
                         _obj_.__update__()
                         _obj_.__render__()
-                    if ij == len(self.scene.objects) - 1:
+                    if ij == len(self.objects) - 1:
                         break
                     ij = ij + 1
 

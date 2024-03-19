@@ -8,5 +8,5 @@ class test():
         print("scripst start")
 
     def update(self):
-
+        print("scripst update " + str(self.i))
         self.i = self.i + 1

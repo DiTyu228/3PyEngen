@@ -167,7 +167,7 @@ if __name__ == '__main__':
     if conrine is True:
         print("shader error")
         mw = mainLib.MapWorker()
-        obj_on_scene = mw.GetMapData('rsr\\map\\' + "proto1" + '.json')
+        obj_on_scene = mw.GetMapData('rsr\\map\\' + "proto2" + '.json')
         pygame.init()
         display = (800, 600)
         scree = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
