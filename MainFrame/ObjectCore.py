@@ -28,13 +28,15 @@ class ScriptRunner:
 
 
 class GameObject:
-    def __init__(self, name, model, xyz, Local_xyz, properti, uv, text_way):
+    def __init__(self, name, model, xyz, Local_xyz, properti, uv, text_way, id):
         pos = xyz
         l_pos = Local_xyz
         object_name = name
         self.uv = uv
         self.textur = text_way
         self.name = object_name
+        self.transform = [1, 1, 1]
+        self.id = id
         self.model = np.array(model, dtype=np.float64)
         self.xyz = pos
         self.local_xyz = l_pos
@@ -83,14 +85,58 @@ class GameObject:
 
         self.model = rotated_points
 
+    def scale(self, scale):
+        self.transform = scale
+
+    def position(self, new_pos):
+        self.xyz = new_pos
+
+    def local_position(self, new_pos):
+        self.local_xyz = new_pos
+
     def __render__(self):
         pr = mainLib.primitivs()
         pr.coord_render_tex(self.textur, self.model, self.uv)
+
+    def __update__(self):
+        vm = m_math.vectors()
+        self.model = vm.avx_hvsum(self.model, self.xyz)
+        self.model = vm.avx_hvsum(self.model, self.local_xyz)
+        self.model = vm.avx_hvmul(self.model, self.transform)
+
+    def __self__(self):
+        return self
 
 
 class main():
     def __init__(self, scene):
         self.scene = scene
+        self.scene.objects = []
+        for _obj_ in self.scene.objects:
+            _type = _obj_['type']
+            if _type == 5:
+                try:
+                    models = _obj_["models"]
+                    try:
+                        uv = _obj_["uv"]
+                    except:
+                        uv = [0, 0, 0]
+                    try:
+                        texr = _obj_['tex']
+                    except:
+                        texr = 'rsr\\material\\material\\test_textr.jpg'
+                except:
+                    models = [0, 0, 0]
+                try:
+                    local_pos = _type["l_xyz"]
+                except:
+                    local_pos = [0, 0, 0]
+                try:
+                    prop_dt = _type['component']
+                except:
+                    prop_dt = [{'name': 'plays_holder', 'file': None}]
+                _obj = GameObject(_type['name'], models, _type['xyz'], local_pos, prop_dt, uv, texr, _type['id'])
+                self.scene.objects.append(_obj)
 
     def main(self, frame_id):
         i = frame_id
@@ -190,34 +236,17 @@ class main():
                 _objeck['xyz'] = xyz
                 _objeck["i"] = iter
                 _objeck["rev"] = rev
-            if type == 5:
-                name = _objeck["name"]
-                obj_id = _objeck["id"]
-                parametrs = _objeck['component']
-                keys = []
-                transform = False
-                rendr = False
-                for k in parametrs.keys():
-                    if 'transform' in k:
-                        transform = True
-                    if 'render' in k:
-                        rendr = True
-                    keys.append(k)
-                if rendr is True:
-                    transf = parametrs['render']
-                    coords = transf["models"]
-                    uv_coords = transf["uv"]
-                    textyres = transf['tex']
-                if transform is True:
-                    transf = parametrs['transform']
-                    xyz = transf['xyz']
-                    local_xyz = transf['local_xyz']
-                    size = transf['size']
-                    coords = vm.avx_hvsum(coords, xyz)
-                    coords = vm.avx_hvsum(coords, local_xyz)
-                    coords = vm.avx_hvmul(coords, transf)
-                if rendr is True:
-                    pr.coord_render_tex(textyres, coords, uv_coords)
+            if _type == 5:
+                ij = 0
+                while True:
+                    _obj_ = self.scene.objects[ij]
+                    obj_id = _obj_.id
+                    if obj_id == _type['id']:
+                        _obj_.__update__()
+                        _obj_.__render__()
+                    if ij == len(self.scene.objects) - 1:
+                        break
+                    ij = ij + 1
 
 
 if __name__ == '__main__':
