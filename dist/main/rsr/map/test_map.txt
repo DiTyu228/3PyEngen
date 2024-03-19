@@ -1,0 +1,6 @@
+cord x:5
+cord y:5
+cord z:5
+cord w:0
+pos cube brick.jpg
+end
