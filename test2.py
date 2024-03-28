@@ -116,7 +116,28 @@ scene = [
                 [1, 1],
                 [0, 1]
             ]
-        }
+        },
+{
+            "name": "game_object_proto",
+            'id': '4',
+            'type': 5,
+            'xyz': [5, -10, 0],
+            "l_xyz": [0, 0, 0],
+            'tex':'rsr\\material\\material\\brick.jpg',
+            'models': [
+            [-20, 0, -10],
+            [20, 0, -10],
+            [20, 0, 10],
+            [-20, 0, 10]
+            ],
+            'uv':[
+                [0, 0],
+                [1, 0],
+                [1, 1],
+                [0, 1]
+            ],
+            'component':[{'name':'test', 'file':'rsr\\scripts\\test.py'}]
+        },
 
 
 ]

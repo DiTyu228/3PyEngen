@@ -9,13 +9,13 @@ class ScriptRunner:
     def __init__(self):
         self.script_objects = []
 
-    def load_scripts(self, script_paths):
+    def load_scripts(self, script_paths, _self, _self_transform, _self_render, _self_id, _self_name, _self_components):
         for script_path in script_paths:
             class_name = os.path.splitext(os.path.basename(script_path))[0]
             spec = importlib.util.spec_from_file_location(class_name, script_path)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            script_obj = getattr(module, class_name)()
+            script_obj = getattr(module, class_name)(_self_transform, _self_render, _self_id, _self_name, _self_components)
             self.script_objects.append(script_obj)
 
     def run_method_on_scripts(self, method_name):
@@ -26,25 +26,55 @@ class ScriptRunner:
             except Exception as e:
                 print(f"Error while calling method {method_name} in script: {script_obj.__class__.__name__}: {e}")
 
+class Transform():
+    def __init__(self, xyz, Local_xyz, rotation, scale):
+        xyz = m_math.Vector3(xyz[0], xyz[1], xyz[2])
+        lxyz = m_math.Vector3(Local_xyz[0], Local_xyz[1], Local_xyz[2])
+        self.position = xyz + lxyz
+        self.rotation = m_math.Vector3(rotation[0], rotation[1], rotation[2])
+        self.scale = m_math.Vector3(scale[0], scale[1], scale[2])
+
+class Renden():
+    def __init__(self, model, uv, text_way):
+        self.model = model
+        self.uv = uv
+        self.texture = text_way
 
 class GameObject:
-    def __init__(self, model, xyz, Local_xyz, properti, uv, text_way, ids):
+    def __init__(self, transform, render, ids, name, component_path):
+        self.render = render
+        self.transform = transform
+        self.id = ids
+        self.name = name
+        self.component_path = []
+        self.component = component_path
+        for scr in self.component:
+            self.component_path.append(scr['file'])
+
+
+
+
+
+class GameObjectCore:
+    def __init__(self, model, xyz, Local_xyz, properti, uv, text_way, ids, name):
         pos = xyz
         l_pos = Local_xyz
         self.uv = uv
         self.textur = text_way
-        self.transform = [1, 1, 1]
         self.id = ids
         self.model = np.array(model, dtype=np.float64)
         self.xyz = pos
         self.local_xyz = l_pos
         self.prop_dt = properti
         self.scrip_name = []
+        self.transform = Transform(xyz, Local_xyz, [0, 0, 0], [1, 1, 1])
+        self.render = Renden(model, uv, text_way)
+        self.object = GameObject(Transform, Renden, ids, name, properti)
         for scr in self.prop_dt:
             self.scrip_name.append(scr['file'])
         runner = ScriptRunner()
         self.scr_raner = runner
-        runner.load_scripts(self.scrip_name)
+        runner.load_scripts(self.scrip_name, self.object, self.object.transform, self.object.render, self.object.id, self.object.name, self.object.component)
         runner.run_method_on_scripts("aweik")
 
     def GetComponent(self, componet):
@@ -84,8 +114,6 @@ class GameObject:
 
         self.model = rotated_points
 
-    def scale(self, scale):
-        self.transform = scale
 
     def position(self, new_pos):
         self.xyz = new_pos
@@ -93,19 +121,42 @@ class GameObject:
     def local_position(self, new_pos):
         self.local_xyz = new_pos
 
-    def __render__(self):
+    def render_(self):
         pr = mainLib.primitivs()
-        pr.coord_render_tex(self.textur, self.model, self.uv)
+        pr.coord_render_tex(self.render.texture, self.render.model, self.render.uv)
 
-    def __update__(self):
+    def update(self):
         vm = m_math.vectors()
-        self.model = vm.avx_hvsum(self.model, self.xyz)
-        self.model = vm.avx_hvsum(self.model, self.local_xyz)
-        self.model = vm.avx_hvmul(self.model, self.transform)
+        self.render.model = np.array(self.render.model) + np.array(self.transform.position.Vector)
+        self.render.model = np.array(self.render.model) * np.array(self.transform.scale.Vector)
+
+        angles = np.radians(self.transform.rotation.Vector)
+
+        # Матрицы поворота для каждой из осей X, Y, Z
+        rotation_x = np.array([
+            [1, 0, 0],
+            [0, np.cos(angles[0]), -np.sin(angles[0])],
+            [0, np.sin(angles[0]), np.cos(angles[0])]
+        ])
+
+        rotation_y = np.array([
+            [np.cos(angles[1]), 0, np.sin(angles[1])],
+            [0, 1, 0],
+            [-np.sin(angles[1]), 0, np.cos(angles[1])]
+        ])
+
+        rotation_z = np.array([
+            [np.cos(angles[2]), -np.sin(angles[2]), 0],
+            [np.sin(angles[2]), np.cos(angles[2]), 0],
+            [0, 0, 1]
+        ])
+
+        # Применение вращений к матрице точек
+        self.render.model = np.dot(self.model, np.dot(rotation_x, np.dot(rotation_y, rotation_z)))
+        self.scr_raner.run_method_on_scripts("update")
 
     def __start__(self):
         runner = self.scr_raner
-        runner.load_scripts(self.scrip_name)
         runner.run_method_on_scripts("start")
 
     def __self__(self):
@@ -136,11 +187,15 @@ class main():
                 except:
                     local_pos = [0, 0, 0]
                 try:
+                    name = _obj_["name"]
+                except:
+                    name = str(ids)
+                try:
                     prop_dt = _obj_['component']
                 except:
                     prop_dt = [{'name': 'plays_holder', 'file': None}]
                 ids = _obj_['id']
-                _obj__ = GameObject(model=models, xyz=_obj_['xyz'], Local_xyz=local_pos, properti=prop_dt, uv=uv, text_way=texr, ids=int(ids))
+                _obj__ = GameObjectCore(model=models, xyz=_obj_['xyz'], Local_xyz=local_pos, properti=prop_dt, uv=uv, text_way=texr, ids=int(ids) , name=name)
                 self.objects.append(_obj__)
 
 
@@ -250,16 +305,16 @@ class main():
                 while True:
                     _obj_ = self.objects[ij]
                     obj_id = _obj_.id
-                    if obj_id == ['id']:
-                        _obj_.__update__()
-                        _obj_.__render__()
+
+                    _obj_.update()
+                    _obj_.render_()
                     if ij == len(self.objects) - 1:
                         break
                     ij = ij + 1
 
 
 if __name__ == '__main__':
-    obj_ = GameObject(Local_xyz=[0, 0, 0], xyz=[0, 0, 0], name='dsd',
+    obj_ = GameObjectCore(Local_xyz=[0, 0, 0], xyz=[0, 0, 0], name='dsd',
                       model=[[-20, -20, 0], [20, -20, 0], [20, 20, 0], [-20, 20, 0]],
                       properti=[{'name': 'test',
                                  'file': 'C:\\Users\\tyuly\\PycharmProjects\\3pyEngie\\rsr\\scripts\\test.py'}])

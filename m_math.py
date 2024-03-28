@@ -1,4 +1,5 @@
 import math
+import random as rd
 
 
 class vectors():
@@ -300,14 +301,42 @@ class vectors():
 
 
 class Vector3():
-    x = 0
-    y = 0
-    z = 0
 
     def __init__(self, _x, _y, _z):
-        self.x = _x
-        x = _x
-        self.y = _y
-        y = _y
-        self.z = _z
-        z = _z
+        self.x = float(_x)
+        self.y = float(_y)
+        self.z = float(_z)
+        self.Vector = [_x, _y, _z]
+
+    def __add__(self, other):
+        x = other.x + self.x
+        y = other.y + self.y
+        z = other.z + self.z
+        return Vector3(x, y, z)
+
+    def __len__(self):
+        return len(self.Vector)
+
+    def __getitem__(self, item):
+        return Vector3[item]
+
+    def __sub__(self, other):
+        x = other.x - self.x
+        y = other.y - self.y
+        z = other.z - self.z
+        return Vector3(x, y, z)
+
+    def __mul__(self, other):
+        x = other.x * self.x
+        y = other.y * self.y
+        z = other.z * self.z
+        return Vector3(x, y, z)
+
+    def __str__(self):
+        return str(self.x) + " " + str(self.y) + " " + str(self.z)
+
+if __name__ == '__main__':
+    a = Vector3(1, 2, 3)
+    b = Vector3(1, 1, 1)
+    c = a + b
+    print(c)
