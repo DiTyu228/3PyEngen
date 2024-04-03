@@ -306,33 +306,39 @@ class Vector3():
         self.x = float(_x)
         self.y = float(_y)
         self.z = float(_z)
-        self.Vector = [_x, _y, _z]
+        self.Vector = [self.x, self.y, self.z]
 
     def __add__(self, other):
         x = other.x + self.x
         y = other.y + self.y
         z = other.z + self.z
+        self.Vector = [self.x, self.y, self.z]
         return Vector3(x, y, z)
 
     def __len__(self):
+        self.Vector = [self.x, self.y, self.z]
         return len(self.Vector)
 
     def __getitem__(self, item):
-        return Vector3[item]
+        self.Vector = [self.x, self.y, self.z]
+        return self.Vector[item]
 
     def __sub__(self, other):
         x = other.x - self.x
         y = other.y - self.y
         z = other.z - self.z
+        self.Vector = [self.x, self.y, self.z]
         return Vector3(x, y, z)
 
     def __mul__(self, other):
         x = other.x * self.x
         y = other.y * self.y
         z = other.z * self.z
+        self.Vector = [self.x, self.y, self.z]
         return Vector3(x, y, z)
 
     def __str__(self):
+        self.Vector = [self.x, self.y, self.z]
         return str(self.x) + " " + str(self.y) + " " + str(self.z)
 
 if __name__ == '__main__':
