@@ -1,9 +1,10 @@
+import Consoll
 import m_math
 import random
 import time
 
 import pygame
-import mouse
+import pygame.freetype
 import keyboard
 import numpy as np
 import math
@@ -12,14 +13,8 @@ import sys
 
 import mainLib
 import MainFrame.ObjectCore as og
-from MainFrame import __init__ as inint
 from MainFrame import GPURenderHelper as GPUhelp
-import PyENGPhys
-import PyENGPhys as phy
-import render_model
-from render_model import *
-import primitivs.primitiv as pr
-import object_core
+from Consoll.pygame_console import Console
 import m_math as ma
 
 from OpenGL.GL.SUN import vertex
@@ -46,8 +41,13 @@ dir = os.getcwd()
 obj_on_scene = []
 main = mainLib.main
 shad = mainLib.shader_worker()
-eng_ver = "0.0.1 work in progress"
+eng_ver = "0.1.2 2d render in progress"
 models = dir + "\\" + resurs + "\\" + "models\\"
+scr_w = 800
+scr_h = 600
+mX = 0
+mY = 0
+_obj_core = 0
 
 
 def terminal_processing(queue):
@@ -70,12 +70,18 @@ def terminal_processing(queue):
             break
 
 
+def MapSelect(path):
+    global _obj_core
+    _obj_core = og.main(mw.GetMapData(path))
+
 
 if __name__ == '__main__':
     # нициализация
     i = 0
     GPUrd = GPUhelp.main()
     sys.path.append('\\')
+
+
 
     # Создаем очередь для передачи команд между процессами
     command_queue = multiprocessing.Queue()
@@ -94,16 +100,6 @@ if __name__ == '__main__':
     class_name = script_files[0].split('.')[0]
 
     # Импортируем модуль
-    module_name = os.path.splitext(script_files[0])[0]
-    spec = importlib.util.spec_from_file_location(module_name, os.path.join(scripts_path, script_files[0]))
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    dim_scripst = getattr(module, class_name)()
-    #запуск медода aweik во всех скриптах
-    try:
-        dim_scripst.aweik()
-    except Exception:
-        pass
     vrct = ma.vectors()
     # obj_core = object_core.MyGLObject()
     textures = main.loadpak(0)
@@ -120,6 +116,8 @@ if __name__ == '__main__':
     sphere = gluNewQuadric()
     paused = False
     run = True
+    last_cam_pos = m_math.Vector3(0, 0, 0)
+    CamPos = m_math.Vector3(0, 0, 0)
 
     ambient = ""
 
@@ -162,16 +160,20 @@ if __name__ == '__main__':
         (5, 7)
     )
 
-
-
     if conrine is True:
         print("shader error")
         mw = mainLib.MapWorker()
-        obj_on_scene = mw.GetMapData('rsr\\map\\' + "proto1" + '.json')
         pygame.init()
-        display = (800, 600)
+        pygame.font.init()
+        display = (scr_w, scr_h)
         scree = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
-        _obj_core = og.main(obj_on_scene)
+        #console = Console(pygame, scree.get_width(),
+        #                  Consoll.pygame_console.Console.get_console_config_json("", config_file_path="Consoll/console_configs/console_config06.json"))
+
+        og.PyGameRenderAgent = pygame
+        og.PyGameDisplay = pygame.surface.Surface
+        GAME_FONT = pygame.freetype.Font('rsr\\fonts\\arial.ttf', 24)
+        MapSelect('rsr\\map\\' + "proto1" + '.json')
         glEnable(GL_DEPTH_TEST)
         glEnable(GL_LIGHTING)
         glShadeModel(GL_SMOOTH)
@@ -221,6 +223,7 @@ if __name__ == '__main__':
         ], dtype=np.float32)
         vao = glGenVertexArrays(1)
         vbo = glGenBuffers(1)
+        ebo = glGenBuffers(1)
         glBindVertexArray(vao)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
         glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
@@ -229,19 +232,14 @@ if __name__ == '__main__':
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
 
-
     if conrine is True:
         # init mouse movement and center mouse on screen
         displayCenter = [scree.get_size()[i] // 2 for i in range(2)]
         mouseMove = [0, 0]
-        pygame.mouse.set_pos(displayCenter)
+        #pygame.mouse.set_pos(displayCenter)
 
     paused = False
     run = True
-    try:
-        dim_scripst.start()
-    except Exception:
-        pass
     # главый цикл
     # изминить логику камеры с wasd на перемещение = текущяя позиция - прошлая
     while run:
@@ -254,57 +252,51 @@ if __name__ == '__main__':
                         run = False
                     if event.key == pygame.K_PAUSE or event.key == pygame.K_p:
                         paused = not paused
-                        pygame.mouse.set_pos(displayCenter)
+                        #pygame.mouse.set_pos(displayCenter)
                 if not paused:
                     if event.type == pygame.MOUSEMOTION:
                         mouseMove = [event.pos[i] - displayCenter[i] for i in range(2)]
-                    pygame.mouse.set_pos(displayCenter)
+                        mX, mY = pygame.mouse.get_pos()
+                        glTranslatef(cx, cy, cz)
+
+                    # pygame.mouse.set_pos(displayCenter)
+                #console.update(pygame.event.get())
+        glRotatef(mouseMove[0] * 0.1, 0.0, 1.0, 0.0)
+        up_down_angle += mouseMove[1] * 0.1
+        glRotatef(up_down_angle, 1.0, 0.0, 0.0)
+
+        #if keyboard.is_pressed('F1'):
+        #    console.toggle(True)
+
 
         if not paused:
+            # get keys
+            keypress = pygame.key.get_pressed()
 
-            if conrine is True:
-                # get keys
-                keypress = pygame.key.get_pressed()
-                # mouseMove = pygame.mouse.get_rel()
+            # mouseMove = pygame.mouse.get_rel()
 
-                # init model view matrix
-                glLoadIdentity()
+            # init model view matrix
+            glLoadIdentity()
 
-                # apply the look up and down
-                up_down_angle += mouseMove[1] * 0.1
-                glRotatef(up_down_angle, 1.0, 0.0, 0.0)
+            # apply the look up and down
 
-                # init the view matrix
-                glPushMatrix()
-                glLoadIdentity()
+            # init the view matrix
+            glPushMatrix()
+            glLoadIdentity()
+            mX, mY = pygame.mouse.get_pos()
         # управление
-        if keyboard.is_pressed('esc'):
-            quit()
-        if keyboard.is_pressed('w'):
-            glTranslatef(0, 0, speed)
-            cz = cz + speed
-        if keyboard.is_pressed('s'):
-            glTranslatef(0.0, 0, -speed)
-            cz = cz - speed
-        if keyboard.is_pressed('a'):
-            glTranslatef(speed, 0, 0)
-            cy = cy - speed
-        if keyboard.is_pressed('d'):
-            glTranslatef(-speed, 0, 0)
-            cy = cy + speed
-        if keyboard.is_pressed('ctrl'):
-            glTranslatef(0, speed, 0)
-            cx = cx - speed
-        if keyboard.is_pressed('space'):
-            glTranslatef(0, -speed, 0)
-            cx = cx + speed
-        if keyboard.is_pressed('v'):
-            dppress = True
-            noclip = True
-            if dppress == True and noclip == True:
-                dppress = False
-                noclip = False
-        mX, mY = mouse.get_position()
+        _obj_core.main(i)
+        mX, mY = pygame.mouse.get_pos()
+        CamOBJ = _obj_core.camera_ret()
+        if not (CamOBJ is None):
+            CamPos = CamOBJ.transform.position
+            CamRot = CamOBJ.transform.rotation
+            TransVect = CamPos - (last_cam_pos - CamPos)
+
+
+
+        text_surface, rect = GAME_FONT.render("Hello World!", (0, 0, 0))
+        scree.blit(text_surface, (40, 250))
 
         # if noclip == False:
         # glTranslatef(0, speed, 0)
@@ -312,63 +304,26 @@ if __name__ == '__main__':
         #   print("coliders")
         #   glTranslatef(0, - speed, 0)
         # apply the left and right rotation
-        if conrine is True:
-            glRotatef(mouseMove[0] * 0.1, 0.0, 1.0, 0.0)
 
-            # multiply the current matrix by the get the new view matrix and store the final vie matrix
-            glMultMatrixf(viewMatrix)
-            viewMatrix = glGetFloatv(GL_MODELVIEW_MATRIX)
+        # multiply the current matrix by the get the new view matrix and store the final vie matrix
+        glMultMatrixf(viewMatrix)
+        viewMatrix = glGetFloatv(GL_MODELVIEW_MATRIX)
 
-            # apply view matrix
-            glPopMatrix()
-            glMultMatrixf(viewMatrix)
+        # apply view matrix
 
-            glLightfv(GL_LIGHT0, GL_POSITION, [1, -1, 1, 0])
+        glPopMatrix()
+        glMultMatrixf(viewMatrix)
 
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-            glPushMatrix()
         # render
 
         # CPU рендер
-        if (conrine == True or conrine == True):
-            _obj_core.main(i)
-            i = i + 1
-        else:
-            # рандер на шейдере
+        _obj_core.GetRender(i, TransVect)
+        last_cam_pos = CamPos
+        i = i + 1
 
-            # Установка начальных значения входных данных
-            cPos = np.array([cx, cy, cz], dtype=np.float32)
-            cRot = np.array([mX, mY], dtype=np.float32)
-            # Получение индексов uniform-переменных из шейдера
-            cPos_loc = glGetUniformLocation(shader_program, "cPos")
-            cRot_loc = glGetUniformLocation(shader_program, "cRot")
-
-
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
-            glUniform3fv(cPos_loc, 1, cPos)
-            glUniform2fv(cRot_loc, 1, cRot)
-
-            # Рендеринг объекта
-            glBindVertexArray(vao)
-            glDrawArrays(GL_TRIANGLES, 0, 3)
-            glBindVertexArray(0)
-
-            # Опрос событий и обновление окна
-            glfw.poll_events()
-            glfw.swap_buffers(window)
-
-            # Обновление входных данных в шейдере
-            glUniform3fv(cPos_loc, 1, cPos)
-            glUniform2fv(cRot_loc, 1, cRot)
-
-        # obj_core.__init__(vertex)
-        # obj_core.draw(texway + 'concreit1.jpg')
-
-        # pl1 = primitivs.plainOntex(texway + 'concreit1.jpg', 0, 0, -1, 0)
-        # pl2 = primitivs.plainOntex(texway + 'concreit1.jpg', 0, 0, 5, 0)
-        # cube1 = primitivs.CubeOnTextr(texway + 'brick.jpg', 1, 1, 0, 1)
+        glPushMatrix()
 
         if conrine == True:
             # end render

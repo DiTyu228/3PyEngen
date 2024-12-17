@@ -13,7 +13,6 @@ import PyENGPhys as phy
 import render_model
 from render_model import *
 import primitivs.primitiv as pr
-import object_core
 
 from OpenGL.GL.SUN import vertex
 from OpenGL.GL.feedback import Vertex
@@ -22,7 +21,6 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
-import glfw
 from OpenGL.GL.shaders import compileShader, compileProgram
 import json
 
@@ -94,10 +92,8 @@ class shader_worker():
 
 
     def shader_creator(self, type, source):
-        # Создаем пустой объект шейдера
         shader = glCreateShader(type)
         glShaderSource(shader, source)
-        # Компилируем шейдер
         glCompileShader(shader)
         return shader
 # noinspection PyUnresolvedReferences

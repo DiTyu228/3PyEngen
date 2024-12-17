@@ -119,7 +119,7 @@ scene = [
         },
 {
             "name": "game_object_proto",
-            'id': '4',
+            'id': '5',
             'type': 5,
             'xyz': [5, -10, 0],
             "l_xyz": [0, 0, 0],
@@ -137,6 +137,22 @@ scene = [
                 [0, 1]
             ],
             'component':[{'name':'test', 'file':'rsr\\scripts\\test.py'}]
+        },
+{
+            "name": "camera_proto",
+            'dev_name': 'cam',
+            'id': '5',
+            'type': 5,
+            'xyz': [5, -10, 0],
+            "l_xyz": [0, 0, 0],
+            'tex':'rsr\\material\\material\\brick.jpg',
+            'models': [
+            [0, 0, 0]
+            ],
+            'uv':[
+                [0, 0]
+            ],
+            'component':[{'name':'test', 'file':'rsr\\scripts\\CameraController.py'}]
         },
 
 

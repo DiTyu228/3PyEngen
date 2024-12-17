@@ -3,20 +3,27 @@ import os
 import numpy as np
 import mainLib
 import m_math
+import pygame
+import pygame.freetype
+
+PyGameRenderAgent = pygame
+PyGameDisplay = ""
 
 
 class ScriptRunner:
     def __init__(self):
         self.script_objects = []
 
-    def load_scripts(self, script_paths, _self, _self_transform, _self_render, _self_id, _self_name, _self_components):
+    def load_scripts(self, script_paths, _self, _self_transform, _self_render, _self_id, _self_name, _self_components,
+                     dev_name='None'):
+        s = 0
         for script_path in script_paths:
             class_name = os.path.splitext(os.path.basename(script_path))[0]
             spec = importlib.util.spec_from_file_location(class_name, script_path)
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
             script_obj = getattr(module, class_name)(_self_transform, _self_render, _self_id, _self_name,
-                                                     _self_components)
+                                                     _self_components, dev_name=dev_name)
             self.script_objects.append(script_obj)
             return script_obj
 
@@ -27,6 +34,7 @@ class ScriptRunner:
                 method_to_call()
             except Exception as e:
                 print(f"Error while calling method {method_name} in script: {script_obj.__class__.__name__}: {e}")
+                continue
 
 
 class Transform():
@@ -50,20 +58,36 @@ class Renden():
         self.texture = text_way
 
 
+class UIText():
+    def __init__(self, color=m_math.Vector3(0, 0, 0), coordinat=m_math.Vector2(0, 0), size=12):
+        self.front = pygame.freetype.Font('rsr\\fonts\\arial.ttf', size)
+        self.color = color
+        self.coordinat = coordinat
+
+    def Render_text(self, text):
+        global PyGameDisplay
+        img = self.front.render(text, True, (self.color.x, self.color.y, self.color.z))
+        #PyGameDisplay.blit(pygame.surface.Surface, (self.coordinat.x, self.coordinat.y))
+
+
 class GameObject:
-    def __init__(self, transform, render, ids, name, component_path):
+    def __init__(self, transform, render, ids, name, component_path, dev_name='None'):
         self.render = render
         self.transform = Transform(transform[0], transform[1], transform[2], transform[3])
         self.id = ids
         self.name = name
         self.component_path = []
         self.component = component_path
+        self.dev_name = dev_name
         for scr in self.component:
             self.component_path.append(scr['file'])
 
+    def __str__(self):
+        return str(self.id) + " " + str(self.dev_name) + " " + str(self.name)
+
 
 class GameObjectCore:
-    def __init__(self, model, xyz, Local_xyz, properti, uv, text_way, ids, name):
+    def __init__(self, model, xyz, Local_xyz, properti, uv, text_way, ids, name, dev_name='None'):
         pos = xyz
         l_pos = Local_xyz
         self.uv = uv
@@ -74,17 +98,21 @@ class GameObjectCore:
         self.local_xyz = l_pos
         self.prop_dt = properti
         self.scrip_name = []
+        self.move = m_math.Vector3(0, 0, 0)
         self.transform = Transform(xyz, Local_xyz, [0, 0, 0], [1, 1, 1])
         self.render = Renden(model, uv, text_way)
-        self.object = GameObject(self.transform, self.render, ids, name, properti)
+        self.object = GameObject(self.transform, self.render, ids, name, properti, dev_name=dev_name)
         self.Runner = []
+        self.camera = None
+        self.scr_hw = ()
+        self.dev_name = dev_name
         for scr in self.prop_dt:
             self.scrip_name.append(scr['file'])
         runner = ScriptRunner()
         self.scr_raner = runner
         self.componentRunner = runner.load_scripts(self.scrip_name, self.object, self.object.transform,
                                                    self.object.render, self.object.id,
-                                                   self.object.name, self.object.component)
+                                                   self.object.name, self.object.component, dev_name=self.dev_name)
         runner.run_method_on_scripts("aweik")
 
     def GetComponent(self, componet):
@@ -130,9 +158,11 @@ class GameObjectCore:
     def local_position(self, new_pos):
         self.local_xyz = new_pos
 
-    def render_(self):
+    def render_(self, move=m_math.Vector3(0, 0, 0), rotate_=m_math.Vector4(0, 0, 0, m_math.pi / 2)):
         pr = mainLib.primitivs()
-        pr.coord_render_tex(self.object.render.texture, self.model, self.object.render.uv)
+        vm = m_math.vectors()
+        pr.coord_render_tex(self.object.render.texture, vm.rotate_model(vm.avx_hvsum(self.model, move), rotate_),
+                            self.object.render.uv)
 
     def update_(self):
         runner = ScriptRunner()
@@ -148,6 +178,8 @@ class GameObjectCore:
         self.object.transform.scale.z = self.componentRunner.transform.scale.z
         self.model = np.array(self.object.render.model) + np.array(self.object.transform.position.Vector)
         self.model = np.array(self.model) * np.array(self.object.transform.scale.Vector)
+        if self.object.dev_name in 'cam':
+            self.camera = self.componentRunner
 
         angles = np.radians(self.object.transform.rotation.Vector)
 
@@ -187,11 +219,18 @@ class GameObjectCore:
     def __self__(self):
         return self
 
+    def _camera(self):
+        return self.camera
+
+    def __str__(self):
+        return str((self.object.name, self.object.dev_name, self.transform.position.Vector))
+
 
 class main():
     def __init__(self, scene):
         self.scene = scene
         self.objects = []
+        self.camera = None
         for _obj_ in self.scene:
             _type = _obj_['type']
             if _type == 5:
@@ -216,12 +255,19 @@ class main():
                 except:
                     name = str(ids)
                 try:
+                    dev_name = _obj_['dev_name']
+                    print(dev_name)
+                except Exception as e:
+                    dev_name = 'None'
+                    print(e)
+                try:
                     prop_dt = _obj_['component']
                 except:
                     prop_dt = [{'name': 'plays_holder', 'file': None}]
                 ids = _obj_['id']
                 _obj__ = GameObjectCore(model=models, xyz=_obj_['xyz'], Local_xyz=local_pos, properti=prop_dt, uv=uv,
-                                        text_way=texr, ids=int(ids), name=name)
+                                        text_way=texr, ids=int(ids), name=name, dev_name=dev_name)
+                self.camera = _obj__._camera()
                 self.objects.append(_obj__)
                 _obj__.__start__()
 
@@ -238,12 +284,37 @@ class main():
         for obj in range(len(obj_on_scene)):
             _objeck = obj_on_scene[obj]
             _type = _objeck['type']
+            if _type == 5:
+                ij = 0
+                while True:
+                    _obj_ = self.objects[ij]
+                    obj_id = _obj_.id
+                    self.camera = _obj_.camera
+                    _obj_.update_()
+                    _obj_.render_()
+
+                    if ij == len(self.objects) - 1:
+                        break
+                    ij = ij + 1
+
+    def GetRender(self, frame_id, move=m_math.Vector3(0, 0, 0), rotate_=m_math.Vector3(0, 0, 0)):
+        i = frame_id
+        obj_on_scene = self.scene
+        pr = mainLib.primitivs()
+        vm = m_math.vectors()
+        rotate_ = m_math.Vector4(rotate_[0], rotate_[1], rotate_[1], m_math.pi / 2)
+        objW = mainLib.ModelWorker()
+        for obj in range(len(obj_on_scene)):
+            _objeck = obj_on_scene[obj]
+            _type = _objeck['type']
             if _type == 0:
                 coords = _objeck["models"]
                 uv_coords = _objeck["uv"]
                 textyres = _objeck['tex']
                 xyz = _objeck['xyz']
                 coords = vm.avx_hvsum(coords, xyz)
+                coords = vm.avx_hvsum(coords, move)
+                coords = vm.rotate_model(coords, rotate_)
                 pr.coord_render_tex(textyres, coords, uv_coords)
             if _type == 1:
                 coords = _objeck["models"]
@@ -251,6 +322,8 @@ class main():
                 textyres = _objeck['tex']
                 xyz = _objeck['xyz']
                 coords = vm.avx_hvsum(coords, xyz)
+                coords = vm.avx_hvsum(coords, move)
+                coords = vm.rotate_model(coords, rotate_)
                 pr.coord_render_tex(textyres, coords, uv_coords)
             if _type == 2:
                 coords = _objeck["models"]
@@ -278,6 +351,8 @@ class main():
                     elif dist[2] < 0:
                         xyz = vm.vsub(xyz, [0, 0, i * (speed_obj / 10)])
                 coords = vm.avx_hvsum(coords, xyz)
+                coords = vm.avx_hvsum(coords, move)
+                coords = vm.rotate_model(coords, rotate_)
                 pr.coord_render_tex(textyres, coords, uv_coords)
                 _objeck['xyz'] = xyz
             if _type == 3:
@@ -291,6 +366,8 @@ class main():
                 size = _objeck['size']
                 coords = vm.avx_nmul(coords, size)
                 coords = vm.avx_hvsum(coords, xyz)
+                coords = vm.avx_hvsum(coords, move)
+                coords = vm.rotate_model(coords, rotate_)
                 pr.coord_render_tex(textyres, coords, uv_coords)
             if _type == 4:
                 coords = _objeck["models"]
@@ -322,6 +399,8 @@ class main():
                     else:
                         rev = False
                 coords = vm.avx_hvsum(coords, xyz)
+                coords = vm.avx_hvsum(coords, move)
+                coords = vm.rotate_model(coords, rotate_)
                 pr.coord_render_tex(textyres, coords, uv_coords)
                 _objeck['xyz'] = xyz
                 _objeck["i"] = iter
@@ -330,13 +409,31 @@ class main():
                 ij = 0
                 while True:
                     _obj_ = self.objects[ij]
-                    obj_id = _obj_.id
+                    _obj_.render_(move)
 
-                    _obj_.update_()
-                    _obj_.render_()
                     if ij == len(self.objects) - 1:
                         break
                     ij = ij + 1
+
+    def GetUItextRender(self, text, pos=m_math.Vector2(0, 0)):
+        pass
+
+    def camera_ret(self):
+        return self.camera
+        # ij = 0
+        # while True:
+        #    _obj_ = self.objects[ij]
+        #
+        #    if ij == len(self.objects) - 1:
+        #        break
+        #    if not (_obj_._camera() is None):
+        #        print(_obj_._camera().transform.position)
+        #        return _obj_._camera()
+        #    else:
+        #        print(_obj_.object.name)
+        #        pass
+        #    ij = ij + 1
+        # return None
 
 
 if __name__ == '__main__':

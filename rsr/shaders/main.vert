@@ -1,12 +1,9 @@
 // Вершинный шейдер (.vert)
-#version 330 core
-layout(location = 0) in vec3 vertexPosition;
-layout(location = 1) in vec2 vertexUV;
+#version 330
 
-out vec2 uv;
+in vec3 position;
 
 void main()
 {
-    gl_Position = vec4(vertexPosition, 1.0);
-    uv = vertexUV;
+    gl_Position = vec4(position, 1.0f) + vec4(1.0f, 0.0f, 0.0f, 0.0f);
 }
