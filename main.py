@@ -167,8 +167,7 @@ if __name__ == '__main__':
         pygame.font.init()
         display = (scr_w, scr_h)
         scree = pygame.display.set_mode(display, DOUBLEBUF | OPENGL)
-        #console = Console(pygame, scree.get_width(),
-        #                  Consoll.pygame_console.Console.get_console_config_json("", config_file_path="Consoll/console_configs/console_config06.json"))
+
 
         og.PyGameRenderAgent = pygame
         og.PyGameDisplay = pygame.surface.Surface

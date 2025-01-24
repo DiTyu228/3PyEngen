@@ -18,7 +18,7 @@ class CameraController(Behaver.GameObject):
         global x
         global y
         speed = 1
-        #print(mx, my)
+        print(mx, my)
         if keyboard.is_pressed('esc'):
             quit()
         if keyboard.is_pressed('w'):

@@ -1,3 +1,4 @@
+import RenderTest
 import main
 import pygame
 
@@ -9,4 +10,7 @@ class mouse():
         pass
 
     def get_position(self):
-        return pygame.mouse.get_pos()
+        if len(RenderTest.mouse_pos) > 2:
+            return RenderTest.mouse_pos
+        else:
+            return (1, 1)

@@ -10,6 +10,7 @@ cubeVertices = ((1,1,1),(1,1,-1),(1,-1,-1),(1,-1,1),(-1,1,1),(-1,-1,-1),(-1,-1,1
 cubeEdges = ((0,1),(0,3),(0,4),(1,2),(1,7),(2,5),(2,3),(3,6),(4,6),(4,7),(5,6),(5,7))
 cubeQuads = ((0,3,6,4),(2,5,6,3),(1,2,5,7),(1,0,4,7),(7,4,6,5),(2,3,0,1))
 obj_core = ""
+mouse_pos = ()
 
 def init():
     global obj_core
@@ -17,6 +18,7 @@ def init():
     obj_core = MF.main(mw.GetMapData('rsr\\map\\' + "proto1" + '.json'))
 
 def main():
+    global mouse_pos
     pg.init()
     display = (1680, 1050)
     pg.display.set_mode(display, DOUBLEBUF|OPENGL)
@@ -32,7 +34,8 @@ def main():
                 pg.quit()
                 quit()
             if event.type == pg.MOUSEMOTION:
-                print(pg.mouse.get_pos())
+                mouse_pos = pg.mouse.get_pos()
+                print(mouse_pos)
 
         glRotatef(1, 1, 1, 1)
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
