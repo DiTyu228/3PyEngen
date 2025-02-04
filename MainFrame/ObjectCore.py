@@ -75,6 +75,7 @@ class GameObject:
         self.render = render
         self.transform = Transform(transform[0], transform[1], transform[2], transform[3])
         self.id = ids
+        self.mousePos = 0
         self.name = name
         self.component_path = []
         self.component = component_path
@@ -103,6 +104,7 @@ class GameObjectCore:
         self.render = Renden(model, uv, text_way)
         self.object = GameObject(self.transform, self.render, ids, name, properti, dev_name=dev_name)
         self.Runner = []
+        self.mousePos = (0, 0)
         self.camera = None
         self.scr_hw = ()
         self.dev_name = dev_name
@@ -158,6 +160,9 @@ class GameObjectCore:
     def local_position(self, new_pos):
         self.local_xyz = new_pos
 
+    def _mousePos(self, pos):
+        self.mousePos = pos
+
     def render_(self, move=m_math.Vector3(0, 0, 0), rotate_=m_math.Vector4(0, 0, 0, m_math.pi / 2)):
         pr = mainLib.primitivs()
         vm = m_math.vectors()
@@ -176,6 +181,7 @@ class GameObjectCore:
         self.object.transform.scale.x = self.componentRunner.transform.scale.x
         self.object.transform.scale.y = self.componentRunner.transform.scale.y
         self.object.transform.scale.z = self.componentRunner.transform.scale.z
+        self.object.mousePos = self.mousePos
         self.model = np.array(self.object.render.model) + np.array(self.object.transform.position.Vector)
         self.model = np.array(self.model) * np.array(self.object.transform.scale.Vector)
         if self.object.dev_name in 'cam':
@@ -271,7 +277,7 @@ class main():
                 self.objects.append(_obj__)
                 _obj__.__start__()
 
-    def main(self, frame_id):
+    def main(self, frame_id, mousePos=(0, 0)):
         i = frame_id
         obj_on_scene = self.scene
         pr = mainLib.primitivs()
@@ -292,12 +298,12 @@ class main():
                     self.camera = _obj_.camera
                     _obj_.update_()
                     _obj_.render_()
-
+                    _obj_._mousePos(mousePos)
                     if ij == len(self.objects) - 1:
                         break
                     ij = ij + 1
 
-    def GetRender(self, frame_id, move=m_math.Vector3(0, 0, 0), rotate_=m_math.Vector3(0, 0, 0)):
+    def GetRender(self, frame_id, move=m_math.Vector3(0, 0, 0), rotate_=m_math.Vector3(0, 0, 0), mouse_pos=(0, 0)):
         i = frame_id
         obj_on_scene = self.scene
         pr = mainLib.primitivs()
@@ -410,6 +416,7 @@ class main():
                 while True:
                     _obj_ = self.objects[ij]
                     _obj_.render_(move)
+                    _obj_._mousePos(mouse_pos)
 
                     if ij == len(self.objects) - 1:
                         break
@@ -417,6 +424,8 @@ class main():
 
     def GetUItextRender(self, text, pos=m_math.Vector2(0, 0)):
         pass
+
+
 
     def camera_ret(self):
         return self.camera
