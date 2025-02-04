@@ -40,7 +40,7 @@ def main():
         glRotatef(1, 1, 1, 1)
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         #Main render
-        obj_core.main(i)
+        obj_core.main(i, mouse_pos)
         CamOBJ = obj_core.camera_ret()
         if not (CamOBJ is None):
             CamPos = CamOBJ.transform.position

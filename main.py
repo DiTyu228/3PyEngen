@@ -258,21 +258,23 @@ if __name__ == '__main__':
                         mX, mY = pygame.mouse.get_pos()
                         glTranslatef(cx, cy, cz)
 
-                    # pygame.mouse.set_pos(displayCenter)
+                    pygame.mouse.set_pos(displayCenter)
                 #console.update(pygame.event.get())
         glRotatef(mouseMove[0] * 0.1, 0.0, 1.0, 0.0)
         up_down_angle += mouseMove[1] * 0.1
         glRotatef(up_down_angle, 1.0, 0.0, 0.0)
 
-        #if keyboard.is_pressed('F1'):
+        # if keyboard.is_pressed('F1'):
         #    console.toggle(True)
 
 
         if not paused:
             # get keys
             keypress = pygame.key.get_pressed()
+            up_down_angle += mouseMove[1] * 0.1
+            glRotatef(up_down_angle, 1.0, 0.0, 0.0)
+            mouseMove = pygame.mouse.get_rel()
 
-            # mouseMove = pygame.mouse.get_rel()
 
             # init model view matrix
             glLoadIdentity()
@@ -283,6 +285,7 @@ if __name__ == '__main__':
             glPushMatrix()
             glLoadIdentity()
             mX, mY = pygame.mouse.get_pos()
+        glRotatef(mouseMove[0] * 0.1, 0.0, 1.0, 0.0)
         # управление
         _obj_core.main(i)
         mX, mY = pygame.mouse.get_pos()
@@ -326,7 +329,7 @@ if __name__ == '__main__':
 
         if conrine == True:
             # end render
-
+            glRotatef(mouseMove[0] * 0.1, 0.0, 1.0, 0.0)
             # glColor4f(0.5, 0.2, 0.2, 1)
             # gluSphere(sphere, 1.0, 32, 16)
 

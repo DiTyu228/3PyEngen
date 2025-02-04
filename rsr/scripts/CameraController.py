@@ -6,19 +6,22 @@ import MainFrame.WinMeneger as mg
 
 x, y = mg.GetScreenZise()
 mouse = mg.mouse()
-mx, my = mouse.get_position()
-
+mx, my = 0, 0
 class CameraController(Behaver.GameObject):
 
     def start(self):
         print("camera start")
+        print("Hello woreld")
 
 
     def update(self):
         global x
         global y
-        speed = 1
-        print(mx, my)
+        speed = 0.0001
+        #print(self.mousePos)
+        #mx, my = self.mousePos
+        #print(mx, my)
+
         if keyboard.is_pressed('esc'):
             quit()
         if keyboard.is_pressed('w'):
